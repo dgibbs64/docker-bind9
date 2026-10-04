@@ -1,7 +1,7 @@
 # BIND 9 Docker Image
 
 <p align="center">
-<a href="https://hub.docker.com/r/dgibbs64/bind9"><img src="https://img.shields.io/docker/pulls/dgibbs64/bind9.svg?style=flat-square&amp;logo=docker&amp;logoColor=white" alt="Docker Pulls"></a>
+<a href="https://hub.docker.com/r/dgibbs/bind9"><img src="https://img.shields.io/docker/pulls/dgibbs/bind9.svg?style=flat-square&amp;logo=docker&amp;logoColor=white" alt="Docker Pulls"></a>
 <a href="https://github.com/dgibbs64/docker-bind9/actions"><img alt="GitHub Workflow Status" src="https://img.shields.io/github/actions/workflow/status/dgibbs64/docker-bind9/action-docker-publish.yml?style=flat-square"></a>
 <a href="https://github.com/dgibbs64/docker-bind9/blob/main/LICENSE.md"><img src="https://img.shields.io/github/license/dgibbs64/docker-bind9?style=flat-square" alt="MIT License"></a></p>
 
@@ -11,7 +11,7 @@
 
 BIND comes from [packages.sury.org](https://packages.sury.org/bind/), maintained by Ondřej Surý, the Debian BIND maintainer, so the image tracks the latest upstream 9.20 release rather than a distribution snapshot. A daily check rebuilds the image within a day of a new BIND release, and it is rebuilt weekly regardless to pick up Debian security updates.
 
-The image is available on [Docker Hub](https://hub.docker.com/r/dgibbs64/bind9) and [GitHub Container Registry](https://github.com/dgibbs64/docker-bind9/pkgs/container/bind9).
+The image is available on [Docker Hub](https://hub.docker.com/r/dgibbs/bind9) and [GitHub Container Registry](https://github.com/dgibbs64/docker-bind9/pkgs/container/bind9).
 
 ### Why another BIND image?
 
@@ -36,7 +36,7 @@ docker run -d --name bind9 \
   -v "$PWD/config:/etc/bind" \
   -v "$PWD/cache:/var/cache/bind" \
   -v "$PWD/records:/var/lib/bind" \
-  dgibbs64/bind9:latest
+  dgibbs/bind9:latest
 ```
 
 ### Docker Compose
@@ -44,7 +44,7 @@ docker run -d --name bind9 \
 ```yaml
 services:
   bind9:
-    image: dgibbs64/bind9:latest
+    image: dgibbs/bind9:latest
     container_name: bind9
     environment:
       - TZ=Europe/London
@@ -69,7 +69,7 @@ services:
 If `/etc/bind` is mounted, it must contain a `named.conf`. If you mount an empty directory, copy the defaults out of the image first:
 
 ```bash
-docker run --rm --entrypoint tar dgibbs64/bind9:latest -C /etc/bind -c . | tar -C ./config -x
+docker run --rm --entrypoint tar dgibbs/bind9:latest -C /etc/bind -c . | tar -C ./config -x
 ```
 
 ## User, UID & GID (PUID / PGID)
@@ -84,10 +84,10 @@ Arguments starting with `-` are passed to `named`. The default is `-g` (foregrou
 
 ```bash
 # IPv4 only (useful on Docker networks without IPv6)
-docker run -d dgibbs64/bind9:latest -g -4
+docker run -d dgibbs/bind9:latest -g -4
 ```
 
-Anything else runs as a command, e.g. `docker run --rm dgibbs64/bind9 named-checkconf -z`.
+Anything else runs as a command, e.g. `docker run --rm dgibbs/bind9 named-checkconf -z`.
 
 ## rndc
 
