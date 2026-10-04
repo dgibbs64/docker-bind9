@@ -22,11 +22,11 @@ This image uses the standard Debian file layout, so it works as a drop-in replac
 
 ## Tags
 
-| Tag(s)    | Contents                                     |
-| --------- | -------------------------------------------- |
-| `latest`  | Latest BIND 9.20 release                     |
-| `9.20`    | Latest BIND 9.20 release                     |
-| `9.20.x`  | A specific BIND release (e.g. `9.20.29`)     |
+| Tag(s)   | Contents                                 |
+| -------- | ---------------------------------------- |
+| `latest` | Latest BIND 9.20 release                 |
+| `9.20`   | Latest BIND 9.20 release                 |
+| `9.20.x` | A specific BIND release (e.g. `9.20.29`) |
 
 ## Usage
 
@@ -60,11 +60,11 @@ services:
 
 ## Volumes
 
-| Path              | Purpose                                                   |
-| ----------------- | --------------------------------------------------------- |
-| `/etc/bind`       | Configuration (`named.conf`) and zone files               |
-| `/var/cache/bind` | Working directory (`directory` option), cache, keys       |
-| `/var/lib/bind`   | Secondary and dynamically updated zones                   |
+| Path              | Purpose                                             |
+| ----------------- | --------------------------------------------------- |
+| `/etc/bind`       | Configuration (`named.conf`) and zone files         |
+| `/var/cache/bind` | Working directory (`directory` option), cache, keys |
+| `/var/lib/bind`   | Secondary and dynamically updated zones             |
 
 If `/etc/bind` is mounted, it must contain a `named.conf`. If you mount an empty directory, copy the defaults out of the image first:
 
