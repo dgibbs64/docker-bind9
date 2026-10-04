@@ -15,6 +15,7 @@ LABEL maintainer="Daniel Gibbs <me@danielgibbs.co.uk>" \
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
 # Install BIND 9 from the packages.sury.org repository (maintained by the Debian BIND maintainer)
+# hadolint ignore=DL3008
 RUN echo "**** Install BIND 9 ****" \
   && apt-get update \
   && apt-get install -y --no-install-recommends ca-certificates curl \
