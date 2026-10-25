@@ -1,0 +1,41 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended", "docker:pinDigests"],
+  "enabledManagers": [
+    "npm",
+    "dockerfile",
+    "docker-compose",
+    "github-actions",
+    "devcontainer"
+  ],
+  "dependencyDashboard": true,
+  "automerge": false,
+  "timezone": "Europe/London",
+  "schedule": ["* * * * 0"],
+  "prConcurrentLimit": 3,
+  "prHourlyLimit": 2,
+  "semanticCommits": "enabled",
+  "vulnerabilityAlerts": {
+    "enabled": true,
+    "automerge": false,
+    "prConcurrentLimit": 2
+  },
+  "packageRules": [
+    {
+      "description": "Group routine updates by manager",
+      "matchUpdateTypes": ["minor", "patch", "digest", "pin", "pinDigest"],
+      "groupName": "{{manager}} routine updates"
+    },
+    {
+      "description": "Review major upgrades separately",
+      "matchUpdateTypes": ["major"],
+      "groupName": null,
+      "dependencyDashboardApproval": true
+    },
+    {
+      "description": "Let ordinary npm releases settle before updating",
+      "matchManagers": ["npm"],
+      "minimumReleaseAge": "3 days"
+    }
+  ]
+}

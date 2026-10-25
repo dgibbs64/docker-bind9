@@ -1,0 +1,114 @@
+name: Security pilot
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/action-security-pilot.yml
+      - .github/scripts/security-report.py
+      - .github/renovate.json
+      - Dockerfile
+      - docker-entrypoint.sh
+      - package.json
+      - package-lock.json
+      - docker-compose.yml
+  schedule:
+    - cron: "23 7 * * 0"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: security-pilot-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  scan:
+    name: Repository and amd64 image
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    permissions:
+      contents: read
+      packages: read
+    steps:
+      - name: Initialize report paths
+        run: |
+          echo "TRIVY_CACHE_DIR=${RUNNER_TEMP}/trivy-cache" >> "${GITHUB_ENV}"
+          echo "REPORT_DIR=${RUNNER_TEMP}/security-reports" >> "${GITHUB_ENV}"
+          echo "RAW_REPORT_DIR=${RUNNER_TEMP}/security-raw" >> "${GITHUB_ENV}"
+          mkdir -p "${RUNNER_TEMP}/security-reports" "${RUNNER_TEMP}/security-raw"
+
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+
+      - name: Install verified Trivy
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          tools="${RUNNER_TEMP}/security-tools"
+          mkdir -p "${tools}" "${RAW_REPORT_DIR}" "${REPORT_DIR}"
+          cd "${tools}"
+          gh release download v0.76.1 --repo aquasecurity/trivy \
+            --pattern trivy_0.76.1_Linux-64bit.tar.gz
+          echo "c7cbe3137fb8a48a17574bede3dd6beb16742d1e9772929940fc90082c39d9c0  trivy_0.76.1_Linux-64bit.tar.gz" | sha256sum --check
+          gh attestation verify trivy_0.76.1_Linux-64bit.tar.gz --repo aquasecurity/trivy
+          tar -xzf trivy_0.76.1_Linux-64bit.tar.gz trivy
+          echo "${tools}" >> "${GITHUB_PATH}"
+          ./trivy version
+
+      - name: Scan repository
+        run: |
+          trivy fs --scanners vuln,misconfig,secret --include-dev-deps \
+            --skip-dirs .git,node_modules --skip-version-check --timeout 10m \
+            --exit-code 0 --format json --output "${RAW_REPORT_DIR}/repository.json" .
+
+      - name: Build unpublished amd64 candidate
+        run: docker build --platform linux/amd64 --tag security-pilot:candidate .
+
+      - name: Scan candidate image
+        run: |
+          trivy image --scanners vuln,secret --image-config-scanners misconfig,secret \
+            --skip-version-check --timeout 10m --exit-code 0 --format json \
+            --output "${RAW_REPORT_DIR}/candidate-image.json" security-pilot:candidate
+
+      - name: Resolve published image for scheduled monitoring
+        if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REGISTRY_USER: ${{ github.actor }}
+          PUBLISHED_IMAGE: ghcr.io/dgibbs64/bind9:latest
+        run: |
+          set -euo pipefail
+          registry_config="$(mktemp -d)"
+          trap 'rm -rf "${registry_config}"' EXIT
+          printf '%s' "${GH_TOKEN}" | docker --config "${registry_config}" login ghcr.io --username "${REGISTRY_USER}" --password-stdin
+          docker --config "${registry_config}" pull --platform linux/amd64 "${PUBLISHED_IMAGE}"
+          digest="$(docker image inspect "${PUBLISHED_IMAGE}" --format '{{index .RepoDigests 0}}')"
+          printf '%s\n' "${digest}" > "${REPORT_DIR}/published-image-digest.txt"
+          docker --config "${registry_config}" save --output "${RUNNER_TEMP}/published-image.tar" "${PUBLISHED_IMAGE}"
+
+      - name: Scan published image archive
+        if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+        run: |
+          trivy image --input "${RUNNER_TEMP}/published-image.tar" \
+            --scanners vuln,secret --image-config-scanners misconfig,secret \
+            --skip-version-check --timeout 10m --exit-code 0 --format json \
+            --output "${RAW_REPORT_DIR}/published-image.json"
+
+      - name: Redact reports and write summary
+        if: always()
+        run: python3 .github/scripts/security-report.py "${RAW_REPORT_DIR}" "${REPORT_DIR}"
+
+      - name: Upload redacted reports
+        if: always()
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        with:
+          name: security-pilot-amd64
+          path: ${{ runner.temp }}/security-reports/
+          if-no-files-found: error
+          retention-days: 7
