@@ -20,7 +20,7 @@ summary = [
 reports = sorted(raw_dir.glob("*.json"))
 for source in reports:
     data = json.loads(source.read_text())
-    counts = collections.Counter()
+    counts: collections.Counter[str] = collections.Counter()
     bind_packages = set()
     for result in data.get("Results", []):
         for vulnerability in result.get("Vulnerabilities", []):
@@ -46,9 +46,10 @@ for source in reports:
         f"{counts['misconfig']} | {counts['secrets']} |"
     )
     if bind_packages:
-        inventory = "\n".join(
+        package_lines = [
             f"{name}: {version}" for name, version in sorted(bind_packages)
-        )
+        ]
+        inventory = "\n".join(package_lines)
         (report_dir / f"{source.stem}-bind-packages.txt").write_text(inventory + "\n")
 if not reports:
     summary += [
@@ -65,8 +66,8 @@ summary += [
         "For BIND images, compare the recorded installed version with upstream ISC advisories."
     ),
 ]
-text = "\n".join(summary) + "\n"
-(report_dir / "summary.md").write_text(text)
+TEXT = "\n".join(summary) + "\n"
+(report_dir / "summary.md").write_text(TEXT)
 if os.environ.get("GITHUB_STEP_SUMMARY"):
-    with open(os.environ["GITHUB_STEP_SUMMARY"], "a") as stream:
-        stream.write(text)
+    with open(os.environ["GITHUB_STEP_SUMMARY"], "a", encoding="utf-8") as stream:
+        stream.write(TEXT)

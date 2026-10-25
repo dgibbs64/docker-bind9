@@ -6,7 +6,7 @@ on:
     branches: [main]
     paths:
       - .github/workflows/action-security-pilot.yml
-      - .github/scripts/security-report.py
+      - .github/scripts/security_report.py
       - .github/renovate.json
       - Dockerfile
       - docker-entrypoint.sh
@@ -35,9 +35,10 @@ jobs:
     steps:
       - name: Initialize report paths
         run: |
-          echo "TRIVY_CACHE_DIR=${RUNNER_TEMP}/trivy-cache" >> "${GITHUB_ENV}"
-          echo "REPORT_DIR=${RUNNER_TEMP}/security-reports" >> "${GITHUB_ENV}"
-          echo "RAW_REPORT_DIR=${RUNNER_TEMP}/security-raw" >> "${GITHUB_ENV}"
+          printf '%s\n' \
+            "TRIVY_CACHE_DIR=${RUNNER_TEMP}/trivy-cache" \
+            "REPORT_DIR=${RUNNER_TEMP}/security-reports" \
+            "RAW_REPORT_DIR=${RUNNER_TEMP}/security-raw" >> "${GITHUB_ENV}"
           mkdir -p "${RUNNER_TEMP}/security-reports" "${RUNNER_TEMP}/security-raw"
 
       - name: Checkout
@@ -102,7 +103,7 @@ jobs:
 
       - name: Redact reports and write summary
         if: always()
-        run: python3 .github/scripts/security-report.py "${RAW_REPORT_DIR}" "${REPORT_DIR}"
+        run: python3 .github/scripts/security_report.py "${RAW_REPORT_DIR}" "${REPORT_DIR}"
 
       - name: Upload redacted reports
         if: always()
