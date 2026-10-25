@@ -20,6 +20,8 @@ summary = [
 reports = sorted(raw_dir.glob("*.json"))
 for source in reports:
     data = json.loads(source.read_text())
+    # Image history and environment can retain credentials independently of findings.
+    data.get("Metadata", {}).pop("ImageConfig", None)
     counts: collections.Counter[str] = collections.Counter()
     bind_packages = set()
     for result in data.get("Results", []):
