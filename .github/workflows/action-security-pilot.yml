@@ -7,7 +7,6 @@ on:
     paths:
       - .github/workflows/action-security-pilot.yml
       - .github/scripts/security_report.py
-      - .github/renovate.json
       - Dockerfile
       - docker-entrypoint.sh
       - package.json
