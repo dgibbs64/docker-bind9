@@ -48,7 +48,7 @@ for source in reports:
         f"{counts['misconfig']} | {counts['secrets']} |"
     )
     if bind_packages:
-        package_lines = [f"{name}: {version}" for name, version in sorted(bind_packages)]
+        package_lines = [f"{pkg}: {ver}" for pkg, ver in sorted(bind_packages)]
         inventory = "\n".join(package_lines)
         (report_dir / f"{source.stem}-bind-packages.txt").write_text(inventory + "\n")
 if not reports:
