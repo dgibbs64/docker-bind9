@@ -86,8 +86,8 @@ jobs:
           platforms: linux/amd64
           load: true
           tags: bind9:test
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          build-args: |
+            BIND9_VERSION=${{ needs.check.outputs.version }}
 
       - name: Test image
         env:
@@ -137,8 +137,8 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          build-args: |
+            BIND9_VERSION=${{ needs.check.outputs.version }}
 
   package-cleanup:
     name: Cleanup Old GitHub Packages

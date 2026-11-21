@@ -2,6 +2,7 @@ FROM debian:trixie-slim
 
 ARG DEBIAN_FRONTEND=noninteractive
 ARG BIND9_REPO=bind
+ARG BIND9_VERSION
 
 # Build date and revision labels are added by the publish workflow
 LABEL maintainer="Daniel Gibbs <me@danielgibbs.co.uk>" \
@@ -34,6 +35,7 @@ RUN echo "**** Install BIND 9 ****" \
   && mkdir -p /run/named /var/cache/bind /var/lib/bind /var/log/bind \
   && chown bind:bind /run/named /var/cache/bind /var/lib/bind /var/log/bind \
   && dpkg-query -W -f='${Version}\n' bind9 | sed -E 's/^[0-9]+://; s/-.*//' > /etc/bind9-version \
+  && if [[ -n "${BIND9_VERSION}" && "$(cat /etc/bind9-version)" != "${BIND9_VERSION}" ]]; then echo "Expected BIND ${BIND9_VERSION}, got $(cat /etc/bind9-version)" >&2; exit 1; fi \
   && rm -rf /usr/share/man /usr/share/doc /usr/share/info /usr/share/lintian /usr/share/locale/* \
   && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
